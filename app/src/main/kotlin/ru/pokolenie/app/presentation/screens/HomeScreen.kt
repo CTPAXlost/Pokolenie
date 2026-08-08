@@ -122,7 +122,7 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(ComposeModifier = ComposeModifier.height(12.dp))
+            Spacer(modifier = ComposeModifier.height(12.dp))
 
             Panel {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -148,7 +148,7 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(ComposeModifier = ComposeModifier.height(16.dp))
+            Spacer(modifier = ComposeModifier.height(16.dp))
 
             if (state.busy) {
                 CircularProgressIndicator(color = Brass, modifier = ComposeModifier.padding(8.dp))
@@ -162,7 +162,7 @@ fun HomeScreen(
                     onClick = onConnectProxy,
                     enabled = !state.busy
                 )
-                Spacer(ComposeModifier = ComposeModifier.height(10.dp))
+                Spacer(modifier = ComposeModifier.height(10.dp))
                 PrimaryButton(
                     text = "Подключить Warp",
                     onClick = onConnectWarp,
@@ -170,7 +170,7 @@ fun HomeScreen(
                 )
             }
 
-            Spacer(ComposeModifier = ComposeModifier.height(12.dp))
+            Spacer(modifier = ComposeModifier.height(12.dp))
             Row(
                 modifier = ComposeModifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
