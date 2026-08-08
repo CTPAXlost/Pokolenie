@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pokolenie</string>
+    <string name="vpn_notification_title">Pokolenie</string>
+    <string name="vpn_notification_connected">VPN подключён (whitelist)</string>
+    <string name="vpn_notification_connecting">Подключение…</string>
+</resources>
