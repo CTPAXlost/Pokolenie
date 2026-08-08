@@ -1,6 +1,8 @@
 package ru.pokolenie.app.warp
 
+import android.content.Context
 import android.util.Base64
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -15,6 +17,7 @@ import ru.pokolenie.app.data.remote.HttpClient
 import java.security.SecureRandom
 import java.security.Security
 import java.time.Instant
+import java.util.UUID
 
 data class GeneratedWarp(
     val profile: WarpProfileEntity,
@@ -22,11 +25,29 @@ data class GeneratedWarp(
 )
 
 class WarpGenerator(
+    private val context: Context,
     private val warpDao: WarpDao
 ) {
     init {
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.insertProviderAt(BouncyCastleProvider(), 1)
+        }
+    }
+
+    suspend fun ensureBundledProfiles() = withContext(Dispatchers.IO) {
+        if (warpDao.getAll().isNotEmpty()) return@withContext
+        val names = listOf("WARPv1_49.conf", "WARPv2_76.conf", "WARPv3_73.conf")
+        names.forEachIndexed { index, fileName ->
+            runCatching {
+                val text = context.assets.open("warp/$fileName").bufferedReader().use { it.readText() }
+                val profile = WarpConfParser.parse(
+                    name = fileName.removeSuffix(".conf"),
+                    confText = text
+                ).copy(isSelected = index == 0)
+                warpDao.insert(profile)
+            }.onFailure {
+                Log.e(TAG, "Failed to seed $fileName", it)
+            }
         }
     }
 
@@ -63,6 +84,12 @@ class WarpGenerator(
         GeneratedWarp(entity.copy(id = id), conf)
     }
 
+    suspend fun importConf(name: String, confText: String): WarpProfileEntity = withContext(Dispatchers.IO) {
+        val entity = WarpConfParser.parse(name, confText)
+        val id = warpDao.insert(entity)
+        entity.copy(id = id)
+    }
+
     suspend fun select(id: Long) = withContext(Dispatchers.IO) {
         warpDao.clearSelection()
         warpDao.select(id)
@@ -73,18 +100,38 @@ class WarpGenerator(
     }
 
     private fun registerWithCloudflare(publicKeyBase64: String): InstallResult {
+        var lastError: String? = null
+        for (api in WARP_APIS) {
+            try {
+                return registerOnce(api, publicKeyBase64)
+            } catch (e: Exception) {
+                lastError = e.message
+                Log.w(TAG, "Warp API failed: $api :: ${e.message}")
+            }
+        }
+        error(
+            "Cloudflare не выдал ключ (${lastError ?: "unknown"}). " +
+                "Используй bundled WARP v1/v2/v3 или генератор https://warp-gen.github.io"
+        )
+    }
+
+    private fun registerOnce(api: String, publicKeyBase64: String): InstallResult {
+        val installId = UUID.randomUUID().toString()
         val bodyJson = JSONObject()
             .put("key", publicKeyBase64)
-            .put("install_id", "")
+            .put("install_id", installId)
             .put("fcm_token", "")
             .put("tos", Instant.now().toString())
             .put("type", "Android")
             .put("locale", "en_US")
+            .put("model", "PC")
+            .put("name", "")
             .toString()
 
         val request = Request.Builder()
-            .url(WARP_API)
+            .url(api)
             .header("User-Agent", "okhttp/3.12.1")
+            .header("CF-Client-Version", "a-6.30-3596")
             .header("Content-Type", "application/json; charset=UTF-8")
             .post(bodyJson.toRequestBody("application/json; charset=UTF-8".toMediaType()))
             .build()
@@ -92,19 +139,32 @@ class WarpGenerator(
         HttpClient.client.newCall(request).execute().use { response ->
             val body = response.body?.string().orEmpty()
             if (!response.isSuccessful) {
-                error("WARP register failed: HTTP ${response.code} $body")
+                error("HTTP ${response.code}: ${body.take(200)}")
             }
-            val result = JSONObject(body).getJSONObject("result")
-            val config = result.getJSONObject("config")
+            val root = JSONObject(body)
+            val result = when {
+                root.has("result") && !root.isNull("result") -> root.getJSONObject("result")
+                root.has("config") -> root
+                else -> error("No value for result: ${body.take(240)}")
+            }
+            val config = when {
+                result.has("config") -> result.getJSONObject("config")
+                else -> result
+            }
             val peer = config.getJSONArray("peers").getJSONObject(0)
             val endpoint = peer.getJSONObject("endpoint")
             val addresses = config.getJSONObject("interface").getJSONObject("addresses")
+            val host = sequenceOf(
+                endpoint.optString("v4"),
+                endpoint.optString("host"),
+                endpoint.optString("v6")
+            ).firstOrNull { it.isNotBlank() } ?: error("endpoint empty")
+
             return InstallResult(
-                addressV4 = addresses.getString("v4") + "/32",
-                addressV6 = addresses.optString("v6").takeIf { it.isNotBlank() }?.let { "$it/128" },
-                endpointHost = endpoint.optString("host").ifBlank {
-                    endpoint.optString("v4")
-                },
+                addressV4 = addresses.getString("v4").let { if (it.contains('/')) it else "$it/32" },
+                addressV6 = addresses.optString("v6").takeIf { it.isNotBlank() }
+                    ?.let { if (it.contains('/')) it else "$it/128" },
+                endpointHost = host,
                 endpointPort = endpoint.optInt("port", 2408),
                 clientId = config.optString("client_id").takeIf { it.isNotBlank() }
             )
@@ -179,7 +239,12 @@ class WarpGenerator(
     )
 
     companion object {
-        private const val WARP_API = "https://api.cloudflareclient.com/v0a2158/reg"
+        private const val TAG = "WarpGenerator"
+        private val WARP_APIS = listOf(
+            "https://api.cloudflareclient.com/v0a1922/reg",
+            "https://api.cloudflareclient.com/v0a2158/reg",
+            "https://api.cloudflareclient.com/v0a2470/reg"
+        )
         private const val CLOUDFLARE_PUBLIC_KEY = "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo="
     }
 }

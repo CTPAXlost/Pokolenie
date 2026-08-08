@@ -28,8 +28,9 @@ data class SettingsState(
     val pingTimeoutMs: Int = 3000,
     val splitMode: SplitMode = SplitMode.ALL,
     val splitPackages: Set<String> = emptySet(),
-    /** Whitelist is always enforced; this flag is informational / locked in UI. */
-    val whitelistForced: Boolean = true
+    val whitelistEnabled: Boolean = true,
+    val fakeIpEnabled: Boolean = false,
+    val fakeDnsEnabled: Boolean = false
 )
 
 class AppSettings(private val context: Context) {
@@ -44,6 +45,9 @@ class AppSettings(private val context: Context) {
     private val pingTimeoutKey = intPreferencesKey("ping_timeout")
     private val splitModeKey = stringPreferencesKey("split_mode")
     private val splitPackagesKey = stringSetPreferencesKey("split_packages")
+    private val whitelistKey = booleanPreferencesKey("whitelist_enabled")
+    private val fakeIpKey = booleanPreferencesKey("fake_ip")
+    private val fakeDnsKey = booleanPreferencesKey("fake_dns")
 
     val state: Flow<SettingsState> = context.dataStore.data.map { prefs ->
         SettingsState(
@@ -60,7 +64,9 @@ class AppSettings(private val context: Context) {
             splitMode = runCatching { SplitMode.valueOf(prefs[splitModeKey] ?: SplitMode.ALL.name) }
                 .getOrDefault(SplitMode.ALL),
             splitPackages = prefs[splitPackagesKey] ?: emptySet(),
-            whitelistForced = true
+            whitelistEnabled = prefs[whitelistKey] ?: true,
+            fakeIpEnabled = prefs[fakeIpKey] ?: false,
+            fakeDnsEnabled = prefs[fakeDnsKey] ?: false
         )
     }
 
@@ -79,9 +85,12 @@ class AppSettings(private val context: Context) {
                 pingTimeoutMs = prefs[pingTimeoutKey] ?: 3000,
                 splitMode = runCatching { SplitMode.valueOf(prefs[splitModeKey] ?: SplitMode.ALL.name) }
                     .getOrDefault(SplitMode.ALL),
-                splitPackages = prefs[splitPackagesKey] ?: emptySet()
+                splitPackages = prefs[splitPackagesKey] ?: emptySet(),
+                whitelistEnabled = prefs[whitelistKey] ?: true,
+                fakeIpEnabled = prefs[fakeIpKey] ?: false,
+                fakeDnsEnabled = prefs[fakeDnsKey] ?: false
             )
-            val next = transform(current).copy(whitelistForced = true)
+            val next = transform(current)
             prefs[mtuKey] = next.mtu.coerceIn(576, 1500)
             prefs[dnsModeKey] = next.dnsMode.name
             prefs[dnsServersKey] = next.dnsServers
@@ -93,6 +102,9 @@ class AppSettings(private val context: Context) {
             prefs[pingTimeoutKey] = next.pingTimeoutMs.coerceIn(500, 15000)
             prefs[splitModeKey] = next.splitMode.name
             prefs[splitPackagesKey] = next.splitPackages
+            prefs[whitelistKey] = next.whitelistEnabled
+            prefs[fakeIpKey] = next.fakeIpEnabled
+            prefs[fakeDnsKey] = next.fakeDnsEnabled
         }
     }
 }

@@ -223,6 +223,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setAutoPing(value: Boolean) = updateSettings { it.copy(autoPingAfterRefresh = value) }
     fun setPingTimeout(value: Int) = updateSettings { it.copy(pingTimeoutMs = value) }
     fun setSplitMode(mode: SplitMode) = updateSettings { it.copy(splitMode = mode) }
+    fun setWhitelist(value: Boolean) = updateSettings { it.copy(whitelistEnabled = value) }
+    fun setFakeIp(value: Boolean) = updateSettings { it.copy(fakeIpEnabled = value) }
+    fun setFakeDns(value: Boolean) = updateSettings { it.copy(fakeDnsEnabled = value) }
 
     fun toggleSplitPackage(packageName: String) {
         updateSettings { current ->
@@ -249,11 +252,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun toggleVpn(context: Context) {
+        when (VpnController.state.value) {
+            VpnConnectionState.Connected, VpnConnectionState.Connecting -> disconnect(context)
+            else -> connectProxy(context)
+        }
+    }
+
     fun connectProxy(context: Context) {
         viewModelScope.launch {
             val server = pokolenie.subscriptions.getSelectedServer()
             if (server == null) {
-                toast("Нет серверов. Обновите источники и сделайте пинг.")
+                toast("Выбери сервер на главной или во вкладке «Серверы».")
                 return@launch
             }
             val config = builder.buildForProxy(server, settings.value)
@@ -263,10 +273,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun connectWarp(context: Context) {
         viewModelScope.launch {
+            pokolenie.warp.ensureBundledProfiles()
             val warp = pokolenie.database.warpDao().getSelected()
                 ?: pokolenie.database.warpDao().getAll().firstOrNull()
             if (warp == null) {
-                toast("Сначала сгенерируйте Warp")
+                toast("Нет Warp-профилей. Нажми «Сгенерировать» или перезапусти приложение.")
                 return@launch
             }
             val config = builder.buildForWarp(warp, settings.value)

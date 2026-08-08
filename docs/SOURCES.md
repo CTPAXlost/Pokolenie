@@ -9,6 +9,7 @@
 | deqwl VLESS | https://raw.githubusercontent.com/dequar/deqwl/refs/heads/main/deray.txt |
 | sbornik VLESS | https://raw.githubusercontent.com/kort0881/sbornik-vless/main/configs/final/vless.txt |
 | sbornik Trojan | https://raw.githubusercontent.com/kort0881/sbornik-vless/main/configs/final/trojan.txt |
+| V2Nodes DE/NL/FI/CZ/AM/SE/LT/US/KZ | `https://www.v2nodes.com/subscriptions/country/{cc}/?key=…` |
 
 Любой источник можно выключить или добавить свой URL на экране **Источники**.
 

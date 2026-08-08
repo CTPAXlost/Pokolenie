@@ -45,6 +45,8 @@ abstract class AppDatabase : RoomDatabase() {
 }
 
 object DefaultSources {
+    private const val V2_KEY = "49941B8EAED51CC"
+
     val all = listOf(
         SourceEntity(
             name = "Whitelist VLESS (rjsxrd)",
@@ -65,6 +67,15 @@ object DefaultSources {
         SourceEntity(
             name = "sbornik Trojan",
             url = "https://raw.githubusercontent.com/kort0881/sbornik-vless/main/configs/final/trojan.txt"
-        )
+        ),
+        SourceEntity(name = "V2Nodes DE", url = "https://www.v2nodes.com/subscriptions/country/de/?key=$V2_KEY"),
+        SourceEntity(name = "V2Nodes NL", url = "https://www.v2nodes.com/subscriptions/country/nl/?key=$V2_KEY"),
+        SourceEntity(name = "V2Nodes FI", url = "https://www.v2nodes.com/subscriptions/country/fi/?key=$V2_KEY"),
+        SourceEntity(name = "V2Nodes CZ", url = "https://www.v2nodes.com/subscriptions/country/cz/?key=$V2_KEY"),
+        SourceEntity(name = "V2Nodes AM", url = "https://www.v2nodes.com/subscriptions/country/am/?key=$V2_KEY"),
+        SourceEntity(name = "V2Nodes SE", url = "https://www.v2nodes.com/subscriptions/country/se/?key=$V2_KEY"),
+        SourceEntity(name = "V2Nodes LT", url = "https://www.v2nodes.com/subscriptions/country/lt/?key=$V2_KEY"),
+        SourceEntity(name = "V2Nodes US", url = "https://www.v2nodes.com/subscriptions/country/us/?key=$V2_KEY"),
+        SourceEntity(name = "V2Nodes KZ", url = "https://www.v2nodes.com/subscriptions/country/kz/?key=$V2_KEY")
     )
 }

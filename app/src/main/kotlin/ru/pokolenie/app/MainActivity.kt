@@ -141,13 +141,20 @@ class MainActivity : ComponentActivity() {
                         composable(Routes.Home) {
                             HomeScreen(
                                 state = home,
-                                onConnectProxy = {
-                                    ensureVpnThen { vm.connectProxy(this@MainActivity) }
+                                servers = servers,
+                                onToggleVpn = {
+                                    if (home.vpnState == ru.pokolenie.app.vpn.VpnConnectionState.Connected ||
+                                        home.vpnState == ru.pokolenie.app.vpn.VpnConnectionState.Connecting
+                                    ) {
+                                        vm.disconnect(this@MainActivity)
+                                    } else {
+                                        ensureVpnThen { vm.connectProxy(this@MainActivity) }
+                                    }
                                 },
+                                onSelectServer = vm::selectServer,
                                 onConnectWarp = {
                                     ensureVpnThen { vm.connectWarp(this@MainActivity) }
                                 },
-                                onDisconnect = { vm.disconnect(this@MainActivity) },
                                 onRefresh = { vm.refreshSubscriptions() },
                                 onPingAll = { vm.pingAllServers() }
                             )
@@ -206,7 +213,10 @@ class MainActivity : ComponentActivity() {
                                 onAllowLan = vm::setAllowLan,
                                 onKeepalive = vm::setKeepalive,
                                 onAutoPing = vm::setAutoPing,
-                                onPingTimeout = vm::setPingTimeout
+                                onPingTimeout = vm::setPingTimeout,
+                                onWhitelist = vm::setWhitelist,
+                                onFakeIp = vm::setFakeIp,
+                                onFakeDns = vm::setFakeDns
                             )
                         }
                     }

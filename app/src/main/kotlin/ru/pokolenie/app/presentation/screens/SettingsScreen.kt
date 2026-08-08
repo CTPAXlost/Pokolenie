@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
@@ -38,39 +39,40 @@ fun SettingsScreen(
     onAllowLan: (Boolean) -> Unit,
     onKeepalive: (Int) -> Unit,
     onAutoPing: (Boolean) -> Unit,
-    onPingTimeout: (Int) -> Unit
+    onPingTimeout: (Int) -> Unit,
+    onWhitelist: (Boolean) -> Unit,
+    onFakeIp: (Boolean) -> Unit,
+    onFakeDns: (Boolean) -> Unit
 ) {
     ScreenScaffold(
         title = "Настройки",
-        subtitle = "MTU, DNS и сеть. Whitelist принудительно включён."
+        subtitle = "Whitelist, Fake IP/DNS, MTU и сеть"
     ) {
         Column(
             modifier = ComposeModifier.verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Panel {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Whitelist", color = Brass, style = MaterialTheme.typography.titleLarge)
-                    Row(
-                        modifier = ComposeModifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = ComposeModifier.weight(1f)) {
-                            Text("Обязательный режим", color = Mist)
-                            Text(
-                                "Через VPN только белые домены/категории, остальное — direct.",
-                                color = MistDim,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                        Switch(
-                            checked = true,
-                            onCheckedChange = null,
-                            enabled = false,
-                            colors = SwitchDefaults.colors(checkedTrackColor = Brass)
-                        )
-                    }
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Маршрутизация", color = Brass, style = MaterialTheme.typography.titleLarge)
+                    SwitchRow(
+                        label = "White list",
+                        checked = settings.whitelistEnabled,
+                        onChange = onWhitelist,
+                        hint = "ON — только белые домены через VPN. OFF — весь трафик через VPN."
+                    )
+                    SwitchRow(
+                        label = "Fake IP",
+                        checked = settings.fakeIpEnabled,
+                        onChange = onFakeIp,
+                        hint = "DNS отвечает фейковыми IP (198.18.0.0/15), меньше утечек SNI."
+                    )
+                    SwitchRow(
+                        label = "Fake DNS",
+                        checked = settings.fakeDnsEnabled,
+                        onChange = onFakeDns,
+                        hint = "DNS-запросы идут через прокси (hijack-dns)."
+                    )
                 }
             }
 
@@ -150,13 +152,23 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun SwitchRow(
+    label: String,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+    hint: String? = null
+) {
     Row(
         modifier = ComposeModifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, color = Mist)
+        Column(modifier = ComposeModifier.weight(1f).padding(end = 12.dp)) {
+            Text(label, color = Mist)
+            if (hint != null) {
+                Text(hint, color = MistDim, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
         Switch(
             checked = checked,
             onCheckedChange = onChange,

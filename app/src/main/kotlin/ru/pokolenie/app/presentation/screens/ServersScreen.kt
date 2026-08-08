@@ -36,7 +36,7 @@ fun ServersScreen(
 ) {
     ScreenScaffold(
         title = "Серверы",
-        subtitle = "Пинг без ответа удаляет узел. Whitelist всегда активен.",
+        subtitle = "Нажми карточку — сервер выбран. Пинг без ответа удаляет узел.",
         actions = {
             GhostButton("Пинг всех", onClick = onPingAll, enabled = !busy)
         }

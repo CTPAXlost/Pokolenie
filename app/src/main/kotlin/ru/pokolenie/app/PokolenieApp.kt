@@ -32,8 +32,11 @@ class PokolenieApp : Application() {
         settings = AppSettings(this)
         subscriptions = SubscriptionRepository(database.sourceDao(), database.serverDao())
         ping = PingHealthService(database.serverDao())
-        warp = WarpGenerator(database.warpDao())
-        appScope.launch { subscriptions.ensureDefaults() }
+        warp = WarpGenerator(this, database.warpDao())
+        appScope.launch {
+            subscriptions.ensureDefaults()
+            warp.ensureBundledProfiles()
+        }
     }
 
     companion object {

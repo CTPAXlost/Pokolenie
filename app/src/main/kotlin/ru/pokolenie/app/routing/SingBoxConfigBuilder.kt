@@ -24,7 +24,7 @@ class SingBoxConfigBuilder {
                 .put("outbounds", JSONArray().put(serverTag(server)).put("direct"))
                 .put("default", serverTag(server))
         )
-        applyWhitelistRoute(root)
+        applyRouting(root, settings)
         applySplitHint(root, settings)
         return root.toString(2)
     }
@@ -42,13 +42,14 @@ class SingBoxConfigBuilder {
                 .put("outbounds", JSONArray().put("warp").put("direct"))
                 .put("default", "warp")
         )
-        applyWhitelistRoute(root)
+        applyRouting(root, settings)
         applySplitHint(root, settings)
         return root.toString(2)
     }
 
     private fun baseConfig(settings: SettingsState): JSONObject {
         val dnsServers = JSONArray()
+        val dnsDetour = if (settings.fakeDnsEnabled || !settings.whitelistEnabled) "proxy" else "direct"
         when (settings.dnsMode) {
             DnsMode.SYSTEM -> {
                 dnsServers.put(
@@ -67,7 +68,7 @@ class SingBoxConfigBuilder {
                             JSONObject()
                                 .put("tag", "dns-$index")
                                 .put("address", address)
-                                .put("detour", "direct")
+                                .put("detour", dnsDetour)
                         )
                     }
             }
@@ -80,9 +81,16 @@ class SingBoxConfigBuilder {
                 )
             }
         }
+        if (settings.fakeIpEnabled) {
+            dnsServers.put(
+                JSONObject()
+                    .put("tag", "fakeip")
+                    .put("address", "fakeip")
+            )
+        }
         if (dnsServers.length() == 0) {
             dnsServers.put(
-                JSONObject().put("tag", "cloudflare").put("address", "1.1.1.1").put("detour", "direct")
+                JSONObject().put("tag", "cloudflare").put("address", "1.1.1.1").put("detour", dnsDetour)
             )
         }
 
@@ -112,22 +120,30 @@ class SingBoxConfigBuilder {
             tun.put("inet6_address", inet6)
         }
 
+        val dns = JSONObject()
+            .put("servers", dnsServers)
+            .put("strategy", if (settings.ipv6) "prefer_ipv4" else "ipv4_only")
+            .put("independent_cache", true)
+        if (settings.fakeIpEnabled) {
+            dns.put(
+                "fakeip",
+                JSONObject()
+                    .put("enabled", true)
+                    .put("inet4_range", "198.18.0.0/15")
+                    .put("inet6_range", "fc00::/18")
+            )
+        }
+
         return JSONObject()
             .put("log", JSONObject().put("level", "info").put("timestamp", true))
-            .put(
-                "dns",
-                JSONObject()
-                    .put("servers", dnsServers)
-                    .put("strategy", if (settings.ipv6) "prefer_ipv4" else "ipv4_only")
-                    .put("independent_cache", true)
-            )
+            .put("dns", dns)
             .put("inbounds", JSONArray().put(tun))
             .put("outbounds", JSONArray())
             .put(
                 "route",
                 JSONObject()
                     .put("auto_detect_interface", true)
-                    .put("final", "direct")
+                    .put("final", if (settings.whitelistEnabled) "direct" else "proxy")
                     .put("rules", JSONArray())
             )
             .put(
@@ -139,18 +155,25 @@ class SingBoxConfigBuilder {
             )
     }
 
-    private fun applyWhitelistRoute(root: JSONObject) {
+    private fun applyRouting(root: JSONObject, settings: SettingsState) {
         val rules = root.getJSONObject("route").getJSONArray("rules")
-        rules.put(
-            JSONObject()
-                .put("protocol", "dns")
-                .put("action", "hijack-dns")
-        )
+        if (settings.fakeDnsEnabled || settings.fakeIpEnabled || settings.whitelistEnabled) {
+            rules.put(
+                JSONObject()
+                    .put("protocol", "dns")
+                    .put("action", "hijack-dns")
+            )
+        }
         rules.put(
             JSONObject()
                 .put("ip_is_private", true)
                 .put("outbound", "direct")
         )
+
+        if (!settings.whitelistEnabled) {
+            root.getJSONObject("route").put("final", "proxy")
+            return
+        }
 
         val domainSuffix = JSONArray()
         WhitelistRules.domainSuffixes.forEach { domainSuffix.put(it) }

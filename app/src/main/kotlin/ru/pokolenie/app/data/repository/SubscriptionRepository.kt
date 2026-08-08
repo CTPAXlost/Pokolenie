@@ -21,8 +21,11 @@ class SubscriptionRepository(
     val servers: Flow<List<ServerEntity>> = serverDao.observeAll()
 
     suspend fun ensureDefaults() = withContext(Dispatchers.IO) {
-        if (sourceDao.getAll().isEmpty()) {
-            DefaultSources.all.forEach { sourceDao.insert(it) }
+        val existing = sourceDao.getAll().map { it.url }.toSet()
+        DefaultSources.all.forEach { source ->
+            if (source.url !in existing) {
+                sourceDao.insert(source)
+            }
         }
     }
 
