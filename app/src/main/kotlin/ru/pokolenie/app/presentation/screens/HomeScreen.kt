@@ -34,7 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.modifier as ComposeModifier
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -101,7 +101,7 @@ fun HomeScreen(
     }
 
     Box(
-        modifier = ComposeModifier
+        modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
@@ -111,7 +111,7 @@ fun HomeScreen(
     ) {
         Atmosphere()
         Column(
-            modifier = ComposeModifier
+            modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 24.dp),
@@ -122,17 +122,17 @@ fun HomeScreen(
                 "whitelist · warp · vless/trojan",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MistDim,
-                modifier = ComposeModifier.padding(top = 4.dp, bottom = 20.dp)
+                modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
             )
 
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = ComposeModifier
+                modifier = Modifier
                     .size(220.dp)
                     .clickable(enabled = !state.busy && !connecting) { onToggleVpn() }
             ) {
                 Canvas(
-                    modifier = ComposeModifier
+                    modifier = Modifier
                         .size(220.dp)
                         .scale(pulse)
                 ) {
@@ -161,7 +161,7 @@ fun HomeScreen(
                         if (state.settings.whitelistEnabled) "whitelist ON" else "whitelist OFF",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MistDim,
-                        modifier = ComposeModifier.clickable {
+                        modifier = Modifier.clickable {
                             onToggleWhitelist(!state.settings.whitelistEnabled)
                         }
                     )
@@ -173,21 +173,21 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(modifier = ComposeModifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Panel {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Сервер", color = Brass, style = MaterialTheme.typography.titleLarge)
                     Box {
                         Row(
-                            modifier = ComposeModifier
+                            modifier = Modifier
                                 .fillMaxWidth()
                                 .background(InkElevated, RoundedCornerShape(12.dp))
                                 .clickable { pickerOpen = true }
                                 .padding(12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column(modifier = ComposeModifier.weight(1f)) {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     state.selectedServer?.name ?: "не выбран",
                                     color = Mist,
@@ -249,13 +249,13 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(modifier = ComposeModifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Panel {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Трафик", color = Brass, style = MaterialTheme.typography.titleLarge)
                     Row(
-                        modifier = ComposeModifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
@@ -273,10 +273,10 @@ fun HomeScreen(
                         "Логи · ${traffic.engine}",
                         color = Brass,
                         style = MaterialTheme.typography.titleLarge,
-                        modifier = ComposeModifier.padding(top = 6.dp)
+                        modifier = Modifier.padding(top = 6.dp)
                     )
                     Column(
-                        modifier = ComposeModifier
+                        modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 72.dp, max = 140.dp)
                             .background(InkElevated, RoundedCornerShape(10.dp))
@@ -294,7 +294,7 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(modifier = ComposeModifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Panel {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -317,17 +317,17 @@ fun HomeScreen(
                         value = unlockDraft,
                         onValueChange = { unlockDraft = it },
                         label = { Text("Ключ оплаты") },
-                        modifier = ComposeModifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
                     GhostButton("Применить ключ", onClick = { onUnlockKey(unlockDraft) })
                 }
             }
 
-            Spacer(modifier = ComposeModifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (state.busy || connecting) {
-                CircularProgressIndicator(color = Brass, modifier = ComposeModifier.padding(8.dp))
+                CircularProgressIndicator(color = Brass, modifier = Modifier.padding(8.dp))
             }
 
             PrimaryButton(
@@ -335,28 +335,28 @@ fun HomeScreen(
                 onClick = onToggleVpn,
                 enabled = !state.busy && !connecting
             )
-            Spacer(modifier = ComposeModifier.height(10.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             PrimaryButton(
                 text = "Подключить Warp",
                 onClick = onConnectWarp,
                 enabled = !state.busy && !connecting && !connected
             )
 
-            Spacer(modifier = ComposeModifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Row(
-                modifier = ComposeModifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 GhostButton(
                     "Обновить ключи",
                     onClick = onRefresh,
-                    modifier = ComposeModifier.weight(1f),
+                    modifier = Modifier.weight(1f),
                     enabled = !state.busy
                 )
                 GhostButton(
                     "Пинг всех",
                     onClick = onPingAll,
-                    modifier = ComposeModifier.weight(1f),
+                    modifier = Modifier.weight(1f),
                     enabled = !state.busy
                 )
             }
@@ -365,7 +365,7 @@ fun HomeScreen(
                 Text(
                     state.statusMessage ?: "Ошибка VPN",
                     color = SignalRed,
-                    modifier = ComposeModifier.padding(top = 12.dp)
+                    modifier = Modifier.padding(top = 12.dp)
                 )
             }
         }
@@ -377,7 +377,7 @@ fun HomeScreen(
 @Composable
 private fun MetaRow(label: String, value: String) {
     Row(
-        modifier = ComposeModifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, color = MistDim, style = MaterialTheme.typography.bodyMedium)
@@ -387,15 +387,15 @@ private fun MetaRow(label: String, value: String) {
             style = MaterialTheme.typography.bodyLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = ComposeModifier.padding(start = 12.dp)
+            modifier = Modifier.padding(start = 12.dp)
         )
     }
 }
 
 @Composable
 private fun Atmosphere() {
-    Box(modifier = ComposeModifier.fillMaxSize()) {
-        Canvas(modifier = ComposeModifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(Brass.copy(alpha = 0.14f), Color.Transparent),
@@ -416,7 +416,7 @@ private fun Atmosphere() {
             )
         }
         Box(
-            modifier = ComposeModifier
+            modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 40.dp, end = 28.dp)
                 .size(8.dp)

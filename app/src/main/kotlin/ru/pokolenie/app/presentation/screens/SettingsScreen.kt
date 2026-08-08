@@ -22,7 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.modifier as ComposeModifier
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import ru.pokolenie.app.presentation.components.Panel
@@ -55,7 +55,7 @@ fun SettingsScreen(
         subtitle = "Whitelist, Fake IP/DNS, MTU и сеть"
     ) {
         Column(
-            modifier = ComposeModifier.verticalScroll(rememberScrollState()),
+            modifier = Modifier.verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Panel {
@@ -104,7 +104,7 @@ fun SettingsScreen(
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = ComposeModifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf(1280, 1400, 1420, 1500).forEach { preset ->
@@ -130,7 +130,7 @@ fun SettingsScreen(
                             value = settings.dnsServers,
                             onValueChange = onDnsServers,
                             label = { Text("Серверы (через запятую)") },
-                            modifier = ComposeModifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                     if (settings.dnsMode == DnsMode.DOH) {
@@ -138,7 +138,7 @@ fun SettingsScreen(
                             value = settings.dohUrl,
                             onValueChange = onDohUrl,
                             label = { Text("DoH URL") },
-                            modifier = ComposeModifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
@@ -187,11 +187,11 @@ private fun SwitchRow(
     hint: String? = null
 ) {
     Row(
-        modifier = ComposeModifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = ComposeModifier.weight(1f).padding(end = 12.dp)) {
+        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
             Text(label, color = Mist)
             if (hint != null) {
                 Text(hint, color = MistDim, style = MaterialTheme.typography.bodyMedium)

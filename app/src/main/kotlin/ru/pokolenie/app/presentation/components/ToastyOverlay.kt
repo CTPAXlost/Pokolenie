@@ -13,7 +13,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier as ComposeModifier
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -60,11 +60,11 @@ fun ToastyOverlay(
         onFinished()
     }
 
-    Box(modifier = ComposeModifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(R.drawable.toasty_face),
             contentDescription = "Toasty",
-            modifier = ComposeModifier
+            modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .offset(x = offsetX.value.dp, y = (-48).dp)
                 .size(160.dp)

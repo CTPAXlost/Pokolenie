@@ -13,7 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier as ComposeModifier
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ru.pokolenie.app.data.db.ServerEntity
 import ru.pokolenie.app.presentation.components.GhostButton
@@ -50,16 +50,16 @@ fun ServersScreen(
             }
         } else {
             LazyColumn(
-                modifier = ComposeModifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(servers, key = { it.id }) { server ->
                     Panel(
-                        modifier = ComposeModifier.clickable { onSelect(server.id) }
+                        modifier = Modifier.clickable { onSelect(server.id) }
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Row(
-                                modifier = ComposeModifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -67,7 +67,7 @@ fun ServersScreen(
                                     server.name,
                                     style = MaterialTheme.typography.titleLarge,
                                     color = if (server.isSelected) Brass else Mist,
-                                    modifier = ComposeModifier.weight(1f)
+                                    modifier = Modifier.weight(1f)
                                 )
                                 Text(
                                     server.latencyMs?.let { "$it ms" } ?: "—",
@@ -83,7 +83,7 @@ fun ServersScreen(
                                 Text("выбран", color = Brass, style = MaterialTheme.typography.labelLarge)
                             }
                             Row(
-                                modifier = ComposeModifier.padding(top = 4.dp),
+                                modifier = Modifier.padding(top = 4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 TinyAction("Пинг") { onPing(server) }
