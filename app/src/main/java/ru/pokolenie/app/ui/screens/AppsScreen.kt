@@ -17,7 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier.modifier
+import androidx.compose.ui.modifier.Modifier
 import androidx.compose.ui.unit.dp
 import ru.pokolenie.app.settings.SplitMode
 import ru.pokolenie.app.ui.components.Panel

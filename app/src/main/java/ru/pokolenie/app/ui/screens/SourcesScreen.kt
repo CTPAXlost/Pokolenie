@@ -18,7 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier.modifier
+import androidx.compose.ui.modifier.Modifier
 import androidx.compose.ui.unit.dp
 import ru.pokolenie.app.data.db.SourceEntity
 import ru.pokolenie.app.ui.components.GhostButton

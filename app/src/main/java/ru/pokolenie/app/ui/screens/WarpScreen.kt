@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier.Modifier
+import androidx.compose.ui.modifier.Modifier
 import androidx.compose.ui.unit.dp
 import ru.pokolenie.app.data.db.WarpProfileEntity
 import ru.pokolenie.app.ui.components.Panel
