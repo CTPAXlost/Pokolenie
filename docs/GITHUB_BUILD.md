@@ -6,9 +6,10 @@ CI лежит в [`.github/workflows/android.yml`](../.github/workflows/android.
 
 На каждый push/PR в `main`/`master` и по кнопке **Run workflow**:
 
-1. Поднимает JDK 17 + Android SDK
-2. Собирает `assembleDebug` и `assembleRelease` (unsigned)
-3. Кладёт APK в Artifacts → `pokolenie-apk`
+1. Собирает `libbox.aar` (sing-box gomobile) → кладёт в `app/libs`
+2. Поднимает JDK 17 + Android SDK
+3. Собирает `assembleDebug` и `assembleRelease` (unsigned) **с реальным VPN-ядром**
+4. Кладёт APK в Artifacts → `pokolenie-apk`
 
 На тег `v*` дополнительно публикует GitHub Release с APK.
 
@@ -51,5 +52,5 @@ git push -u origin main
 
 ## libbox
 
-Без `app/libs/libbox.aar` CI соберёт stub-сборку (UI + подписки + Warp-конфиги).  
-Полноценное ядро — положи AAR в репозиторий (осторожно с лицензией/размером) или скачивай его в workflow отдельным шагом.
+CI сам собирает AAR из SagerNet/sing-box. Локально без AAR — stub (TUN без прокси).  
+См. также [BUILD_LIBBOX.md](BUILD_LIBBOX.md).

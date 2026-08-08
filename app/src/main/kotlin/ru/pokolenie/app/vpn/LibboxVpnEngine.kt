@@ -102,7 +102,9 @@ class LibboxVpnEngine : VpnEngine {
                 "usePlatformAutoDetectInterfaceControl" -> false
                 "autoDetectInterfaceControl" -> null
                 "writeLog" -> {
-                    Log.d(TAG, args?.firstOrNull()?.toString() ?: "")
+                    val line = args?.firstOrNull()?.toString().orEmpty()
+                    Log.d(TAG, line)
+                    if (line.isNotBlank()) VpnDiagnostics.log(line.take(180))
                     null
                 }
                 else -> defaultValue(method.returnType)

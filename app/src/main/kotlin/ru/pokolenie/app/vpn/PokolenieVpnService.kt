@@ -7,6 +7,8 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.net.VpnService
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -19,6 +21,14 @@ import ru.pokolenie.core.VpnEngineProvider
 class PokolenieVpnService : VpnService() {
 
     private var tun: ParcelFileDescriptor? = null
+    private val trafficHandler = Handler(Looper.getMainLooper())
+    private var trafficEngineLabel = "stub"
+    private val trafficTicker = object : Runnable {
+        override fun run() {
+            VpnDiagnostics.pollTraffic(trafficEngineLabel)
+            trafficHandler.postDelayed(this, 1000L)
+        }
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
@@ -26,6 +36,7 @@ class PokolenieVpnService : VpnService() {
                 val config = intent.getStringExtra(EXTRA_CONFIG).orEmpty()
                 val label = intent.getStringExtra(EXTRA_LABEL) ?: "Pokolenie"
                 startForeground(NOTIFICATION_ID, buildNotification(getString(R.string.vpn_notification_connecting)))
+                VpnDiagnostics.log("Connecting: $label")
                 connectInternal(config, label)
             }
             ACTION_DISCONNECT -> disconnectInternal()
@@ -80,25 +91,40 @@ class PokolenieVpnService : VpnService() {
 
             val cleanConfig = JSONObject(configJson).also { it.remove("_pokolenie") }.toString()
             val engine = VpnEngineProvider.get()
+            trafficEngineLabel = when (engine) {
+                is LibboxVpnEngine -> "libbox"
+                is StubVpnEngine -> "stub"
+                else -> engine.javaClass.simpleName
+            }
             when (engine) {
-                is LibboxVpnEngine -> engine.start(this, cleanConfig, established.fd)
+                is LibboxVpnEngine -> {
+                    VpnDiagnostics.log("Starting libbox…")
+                    engine.start(this, cleanConfig, established.fd)
+                }
                 is StubVpnEngine -> {
                     engine.start(cleanConfig)
+                    VpnDiagnostics.log("WARN: libbox.aar missing — stub TUN (трафик не проксируется)")
                     Log.w(TAG, "libbox.aar not found — stub mode (config stored, UI works)")
                 }
                 else -> engine.start(cleanConfig)
             }
 
             startForeground(NOTIFICATION_ID, buildNotification(getString(R.string.vpn_notification_connected)))
+            VpnDiagnostics.markConnected(trafficEngineLabel)
+            trafficHandler.removeCallbacks(trafficTicker)
+            trafficHandler.post(trafficTicker)
             VpnController.onConnected(label)
         } catch (e: Exception) {
             Log.e(TAG, "connect failed", e)
+            VpnDiagnostics.log("ERROR: ${e.message}")
             VpnController.onError(e.message ?: "VPN error")
             disconnectInternal()
         }
     }
 
     private fun disconnectInternal() {
+        trafficHandler.removeCallbacks(trafficTicker)
+        VpnDiagnostics.markDisconnected()
         runCatching { VpnEngineProvider.get().stop() }
         disconnectTunOnly()
         VpnController.onDisconnected()

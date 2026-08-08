@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -24,24 +25,30 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier as ComposeModifier
+import androidx.compose.ui.modifier as ComposeModifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ru.pokolenie.app.billing.TrialState
 import ru.pokolenie.app.data.db.ServerEntity
+import ru.pokolenie.app.openvpn.AntizapretOpenVpn
 import ru.pokolenie.app.presentation.components.GhostButton
 import ru.pokolenie.app.presentation.components.Panel
 import ru.pokolenie.app.presentation.components.PrimaryButton
+import ru.pokolenie.app.presentation.components.ToastyOverlay
 import ru.pokolenie.app.presentation.theme.Brass
 import ru.pokolenie.app.presentation.theme.BrassSoft
 import ru.pokolenie.app.presentation.theme.InkElevated
@@ -51,16 +58,23 @@ import ru.pokolenie.app.presentation.theme.SignalGreen
 import ru.pokolenie.app.presentation.theme.SignalRed
 import ru.pokolenie.app.viewmodel.HomeUiState
 import ru.pokolenie.app.vpn.VpnConnectionState
+import ru.pokolenie.app.vpn.VpnDiagnostics
 
 @Composable
 fun HomeScreen(
     state: HomeUiState,
     servers: List<ServerEntity>,
+    trial: TrialState,
+    antizapretSummary: String,
     onToggleVpn: () -> Unit,
     onSelectServer: (Long) -> Unit,
     onConnectWarp: () -> Unit,
     onRefresh: () -> Unit,
-    onPingAll: () -> Unit
+    onPingAll: () -> Unit,
+    onToggleWhitelist: (Boolean) -> Unit,
+    onConnectAntizapret: () -> Unit,
+    onUnlockKey: (String) -> Unit,
+    onStartTrial: () -> Unit
 ) {
     val connected = state.vpnState == VpnConnectionState.Connected
     val connecting = state.vpnState == VpnConnectionState.Connecting
@@ -75,6 +89,16 @@ fun HomeScreen(
         label = "pulse"
     )
     var pickerOpen by remember { mutableStateOf(false) }
+    var showToasty by remember { mutableStateOf(false) }
+    var unlockDraft by remember { mutableStateOf("") }
+    val traffic by VpnDiagnostics.traffic.collectAsStateWithLifecycle()
+    val logs by VpnDiagnostics.logs.collectAsStateWithLifecycle()
+
+    LaunchedEffect(state.vpnState) {
+        if (state.vpnState == VpnConnectionState.Connected) {
+            showToasty = true
+        }
+    }
 
     Box(
         modifier = ComposeModifier
@@ -136,7 +160,15 @@ fun HomeScreen(
                     Text(
                         if (state.settings.whitelistEnabled) "whitelist ON" else "whitelist OFF",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MistDim
+                        color = MistDim,
+                        modifier = ComposeModifier.clickable {
+                            onToggleWhitelist(!state.settings.whitelistEnabled)
+                        }
+                    )
+                    Text(
+                        if (state.libboxReady) "engine: libbox" else "engine: stub",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (state.libboxReady) SignalGreen else SignalRed
                     )
                 }
             }
@@ -207,9 +239,88 @@ fun HomeScreen(
                     )
                     MetaRow("Узлов", state.serverCount.toString())
                     MetaRow("Warp", state.selectedWarp?.name ?: "bundled / сгенерируй")
+                    MetaRow(
+                        "Пинг",
+                        "TCP connect · ${state.selectedServer?.latencyMs?.let { "$it ms" } ?: "—"}"
+                    )
                     state.statusMessage?.let {
                         Text(it, color = MistDim, style = MaterialTheme.typography.bodyMedium)
                     }
+                }
+            }
+
+            Spacer(modifier = ComposeModifier.height(12.dp))
+
+            Panel {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Трафик", color = Brass, style = MaterialTheme.typography.titleLarge)
+                    Row(
+                        modifier = ComposeModifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "↓ ${VpnDiagnostics.formatBytes(traffic.rxBytes)} · ${VpnDiagnostics.formatRate(traffic.rxRate)}",
+                            color = Mist,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            "↑ ${VpnDiagnostics.formatBytes(traffic.txBytes)} · ${VpnDiagnostics.formatRate(traffic.txRate)}",
+                            color = Mist,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Text(
+                        "Логи · ${traffic.engine}",
+                        color = Brass,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = ComposeModifier.padding(top = 6.dp)
+                    )
+                    Column(
+                        modifier = ComposeModifier
+                            .fillMaxWidth()
+                            .heightIn(min = 72.dp, max = 140.dp)
+                            .background(InkElevated, RoundedCornerShape(10.dp))
+                            .padding(10.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        if (logs.isEmpty()) {
+                            Text("нет событий", color = MistDim, style = MaterialTheme.typography.bodyMedium)
+                        } else {
+                            logs.take(24).forEach { line ->
+                                Text(line, color = MistDim, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = ComposeModifier.height(12.dp))
+
+            Panel {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(AntizapretOpenVpn.DISPLAY_NAME, color = Brass, style = MaterialTheme.typography.titleLarge)
+                    Text(antizapretSummary, color = MistDim, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        "Доступ: ${if (trial.isActive) trial.remainingLabel() else "нужна оплата / ключ"}",
+                        color = if (trial.isActive) SignalGreen else SignalRed,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    if (!trial.isActive && trial.expiresAt == 0L) {
+                        PrimaryButton(text = "Активировать 24ч", onClick = onStartTrial)
+                    }
+                    PrimaryButton(
+                        text = "Подключить ${AntizapretOpenVpn.DISPLAY_NAME}",
+                        onClick = onConnectAntizapret,
+                        enabled = trial.isActive && !state.busy
+                    )
+                    OutlinedTextField(
+                        value = unlockDraft,
+                        onValueChange = { unlockDraft = it },
+                        label = { Text("Ключ оплаты") },
+                        modifier = ComposeModifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    GhostButton("Применить ключ", onClick = { onUnlockKey(unlockDraft) })
                 }
             }
 
@@ -258,6 +369,8 @@ fun HomeScreen(
                 )
             }
         }
+
+        ToastyOverlay(visible = showToasty) { showToasty = false }
     }
 }
 

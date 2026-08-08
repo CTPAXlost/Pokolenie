@@ -34,7 +34,7 @@ fun WarpScreen(
 ) {
     ScreenScaffold(
         title = "Warp",
-        subtitle = "Bundled v1/v2/v3 + Cloudflare API. Генератор: warp-gen.github.io"
+        subtitle = "WARP_STR* (AmneziaWG/engage:4500) + v1/v2/v3. Источник: Cloudflare WARP API + Amnezia params"
     ) {
         PrimaryButton(
             text = if (busy) "Генерация…" else "Сгенерировать Warp",

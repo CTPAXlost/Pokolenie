@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -16,17 +17,22 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier as ComposeModifier
+import androidx.compose.ui.modifier as ComposeModifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import ru.pokolenie.app.settings.DnsMode
-import ru.pokolenie.app.settings.SettingsState
 import ru.pokolenie.app.presentation.components.Panel
 import ru.pokolenie.app.presentation.components.ScreenScaffold
 import ru.pokolenie.app.presentation.theme.Brass
 import ru.pokolenie.app.presentation.theme.Ink
 import ru.pokolenie.app.presentation.theme.Mist
 import ru.pokolenie.app.presentation.theme.MistDim
+import ru.pokolenie.app.settings.DnsMode
+import ru.pokolenie.app.settings.SettingsState
 
 @Composable
 fun SettingsScreen(
@@ -77,15 +83,37 @@ fun SettingsScreen(
             }
 
             Panel {
+                var mtuText by remember(settings.mtu) { mutableStateOf(settings.mtu.toString()) }
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("MTU: ${settings.mtu}", color = Brass, style = MaterialTheme.typography.titleLarge)
-                    Slider(
-                        value = settings.mtu.toFloat(),
-                        onValueChange = { onMtu(it.toInt()) },
-                        valueRange = 576f..1500f,
-                        steps = 18
+                    Text("MTU", color = Brass, style = MaterialTheme.typography.titleLarge)
+                    OutlinedTextField(
+                        value = mtuText,
+                        onValueChange = { raw ->
+                            val digits = raw.filter { it.isDigit() }.take(4)
+                            mtuText = digits
+                            digits.toIntOrNull()?.let { value ->
+                                if (value in 576..1500) onMtu(value)
+                            }
+                        },
+                        label = { Text("576–1500") },
+                        supportingText = {
+                            Text(
+                                "Текущее: ${settings.mtu}. Для Warp обычно 1280.",
+                                color = MistDim
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = ComposeModifier.fillMaxWidth()
                     )
-                    Text("Для Warp обычно 1280", color = MistDim, style = MaterialTheme.typography.bodyMedium)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(1280, 1400, 1420, 1500).forEach { preset ->
+                            DnsChip(preset.toString(), settings.mtu == preset) {
+                                mtuText = preset.toString()
+                                onMtu(preset)
+                            }
+                        }
+                    }
                 }
             }
 
@@ -141,7 +169,7 @@ fun SettingsScreen(
                         valueRange = 500f..10000f
                     )
                     Text(
-                        "Нет ответа → сервер удаляется из списка.",
+                        "Пинг = TCP connect к хосту (не через туннель). Нет ответа → сервер удаляется.",
                         color = MistDim,
                         style = MaterialTheme.typography.bodyMedium
                     )

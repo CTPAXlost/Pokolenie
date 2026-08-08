@@ -34,19 +34,42 @@ class WarpGenerator(
         }
     }
 
+    /**
+     * Seed proven AmneziaWG WARP (STR) configs first, then legacy bundled.
+     * STR style = Cloudflare WARP keys + engage.cloudflareclient.com:4500 + Jc/I1 (CyberShield/Amnezia).
+     */
     suspend fun ensureBundledProfiles() = withContext(Dispatchers.IO) {
-        if (warpDao.getAll().isNotEmpty()) return@withContext
-        val names = listOf("WARPv1_49.conf", "WARPv2_76.conf", "WARPv3_73.conf")
-        names.forEachIndexed { index, fileName ->
+        val preferred = listOf(
+            "WARP_STR8605.conf",
+            "WARP_STR4470.conf",
+            "WARP_STR5118.conf",
+            "WARP_STR6230.conf",
+            "WARPv1_49.conf",
+            "WARPv2_76.conf",
+            "WARPv3_73.conf"
+        )
+        val before = warpDao.getAll()
+        val existingNames = before.map { it.name }.toSet()
+        var insertedStr = false
+        preferred.forEach { fileName ->
+            val name = fileName.removeSuffix(".conf")
+            if (name in existingNames) return@forEach
             runCatching {
                 val text = context.assets.open("warp/$fileName").bufferedReader().use { it.readText() }
-                val profile = WarpConfParser.parse(
-                    name = fileName.removeSuffix(".conf"),
-                    confText = text
-                ).copy(isSelected = index == 0)
+                val select = before.isEmpty() && name == "WARP_STR8605"
+                val profile = WarpConfParser.parse(name = name, confText = text)
+                    .copy(isSelected = select)
                 warpDao.insert(profile)
+                if (name.startsWith("WARP_STR")) insertedStr = true
             }.onFailure {
                 Log.e(TAG, "Failed to seed $fileName", it)
+            }
+        }
+        if (insertedStr && before.isEmpty()) {
+            val str = warpDao.getAll().firstOrNull { it.name == "WARP_STR8605" }
+            if (str != null) {
+                warpDao.clearSelection()
+                warpDao.select(str.id)
             }
         }
     }
@@ -192,11 +215,12 @@ class WarpGenerator(
         appendLine("DNS = 1.1.1.1, 1.0.0.1")
         appendLine("MTU = $mtu")
         if (amneziaStyle) {
-            appendLine("Jc = 4")
-            appendLine("Jmin = 40")
-            appendLine("Jmax = 70")
+            // AmneziaWG / STR-style junk (как в WARP_STR*.conf). Нужен AmneziaWG-совместимый стек.
             appendLine("S1 = 0")
             appendLine("S2 = 0")
+            appendLine("Jc = 5")
+            appendLine("Jmin = 100")
+            appendLine("Jmax = 200")
             appendLine("H1 = 1")
             appendLine("H2 = 2")
             appendLine("H3 = 3")
@@ -209,8 +233,12 @@ class WarpGenerator(
         appendLine("[Peer]")
         appendLine("PublicKey = $peerPublicKey")
         appendLine("AllowedIPs = 0.0.0.0/0, ::/0")
-        appendLine("Endpoint = $endpointHost:$endpointPort")
+        // STR/CyberShield используют engage:4500; Cloudflare API часто отдаёт IP:2408
+        val host = if (amneziaStyle) "engage.cloudflareclient.com" else endpointHost
+        val port = if (amneziaStyle) 4500 else endpointPort
+        appendLine("Endpoint = $host:$port")
         appendLine("PersistentKeepalive = 25")
+        appendLine("# source: Cloudflare WARP API + AmneziaWG params (STR style)")
     }
 
     private fun generateX25519(): KeyPairBase64 {
