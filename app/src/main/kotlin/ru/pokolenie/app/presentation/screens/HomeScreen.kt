@@ -24,7 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.modifier.Modifier
+import androidx.compose.ui.Modifier as ComposeModifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -65,7 +65,7 @@ fun HomeScreen(
     )
 
     Box(
-        modifier = Modifier
+        modifier = ComposeModifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
@@ -75,7 +75,7 @@ fun HomeScreen(
     ) {
         Atmosphere()
         Column(
-            modifier = Modifier
+            modifier = ComposeModifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 24.dp),
@@ -86,11 +86,11 @@ fun HomeScreen(
                 "whitelist · warp · vless/trojan",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MistDim,
-                modifier = Modifier.padding(top = 4.dp, bottom = 28.dp)
+                modifier = ComposeModifier.padding(top = 4.dp, bottom = 28.dp)
             )
 
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(220.dp)) {
-                Canvas(modifier = Modifier
+            Box(contentAlignment = Alignment.Center, modifier = ComposeModifier.size(220.dp)) {
+                Canvas(modifier = ComposeModifier
                     .size(220.dp)
                     .scale(pulse)) {
                     drawCircle(
@@ -122,7 +122,7 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(Modifier = Modifier.height(12.dp))
+            Spacer(ComposeModifier = ComposeModifier.height(12.dp))
 
             Panel {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -148,10 +148,10 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(Modifier = Modifier.height(16.dp))
+            Spacer(ComposeModifier = ComposeModifier.height(16.dp))
 
             if (state.busy) {
-                CircularProgressIndicator(color = Brass, modifier = Modifier.padding(8.dp))
+                CircularProgressIndicator(color = Brass, modifier = ComposeModifier.padding(8.dp))
             }
 
             if (connected) {
@@ -162,7 +162,7 @@ fun HomeScreen(
                     onClick = onConnectProxy,
                     enabled = !state.busy
                 )
-                Spacer(Modifier = Modifier.height(10.dp))
+                Spacer(ComposeModifier = ComposeModifier.height(10.dp))
                 PrimaryButton(
                     text = "Подключить Warp",
                     onClick = onConnectWarp,
@@ -170,20 +170,20 @@ fun HomeScreen(
                 )
             }
 
-            Spacer(Modifier = Modifier.height(12.dp))
+            Spacer(ComposeModifier = ComposeModifier.height(12.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = ComposeModifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                GhostButton("Обновить ключи", onClick = onRefresh, modifier = Modifier.weight(1f), enabled = !state.busy)
-                GhostButton("Пинг всех", onClick = onPingAll, modifier = Modifier.weight(1f), enabled = !state.busy)
+                GhostButton("Обновить ключи", onClick = onRefresh, modifier = ComposeModifier.weight(1f), enabled = !state.busy)
+                GhostButton("Пинг всех", onClick = onPingAll, modifier = ComposeModifier.weight(1f), enabled = !state.busy)
             }
 
             if (state.vpnState == VpnConnectionState.Error) {
                 Text(
                     state.statusMessage ?: "Ошибка VPN",
                     color = SignalRed,
-                    modifier = Modifier.padding(top = 12.dp)
+                    modifier = ComposeModifier.padding(top = 12.dp)
                 )
             }
         }
@@ -193,7 +193,7 @@ fun HomeScreen(
 @Composable
 private fun MetaRow(label: String, value: String) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = ComposeModifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, color = MistDim, style = MaterialTheme.typography.bodyMedium)
@@ -203,15 +203,15 @@ private fun MetaRow(label: String, value: String) {
             style = MaterialTheme.typography.bodyLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = 12.dp)
+            modifier = ComposeModifier.padding(start = 12.dp)
         )
     }
 }
 
 @Composable
 private fun Atmosphere() {
-    Box(modifier = Modifier.fillMaxSize()) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = ComposeModifier.fillMaxSize()) {
+        Canvas(modifier = ComposeModifier.fillMaxSize()) {
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(Brass.copy(alpha = 0.14f), Color.Transparent),
@@ -232,7 +232,7 @@ private fun Atmosphere() {
             )
         }
         Box(
-            modifier = Modifier
+            modifier = ComposeModifier
                 .align(Alignment.TopEnd)
                 .padding(top = 40.dp, end = 28.dp)
                 .size(8.dp)

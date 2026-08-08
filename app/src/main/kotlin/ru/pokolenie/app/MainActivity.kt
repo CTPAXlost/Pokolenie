@@ -28,7 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.modifier.Modifier
+import androidx.compose.ui.Modifier as ComposeModifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -136,7 +136,7 @@ class MainActivity : ComponentActivity() {
                     NavHost(
                         navController = nav,
                         startDestination = Routes.Home,
-                        modifier = Modifier.padding(padding)
+                        modifier = ComposeModifier.padding(padding)
                     ) {
                         composable(Routes.Home) {
                             HomeScreen(

@@ -18,7 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.modifier.Modifier
+import androidx.compose.ui.Modifier as ComposeModifier
 import androidx.compose.ui.unit.dp
 import ru.pokolenie.app.data.db.SourceEntity
 import ru.pokolenie.app.presentation.components.GhostButton
@@ -56,14 +56,14 @@ fun SourcesScreen(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Название") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = ComposeModifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
                     label = { Text("URL (raw.githubusercontent.com/…)") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = ComposeModifier.fillMaxWidth(),
                     singleLine = true
                 )
                 PrimaryButton(
@@ -81,14 +81,14 @@ fun SourcesScreen(
         }
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = ComposeModifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(sources, key = { it.id }) { source ->
                 Panel {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = ComposeModifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {

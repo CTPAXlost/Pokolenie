@@ -18,7 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.modifier.Modifier
+import androidx.compose.ui.Modifier as ComposeModifier
 import androidx.compose.ui.unit.dp
 import ru.pokolenie.app.presentation.theme.Brass
 import ru.pokolenie.app.presentation.theme.Ink
@@ -34,24 +34,24 @@ fun ScreenScaffold(
     content: @Composable () -> Unit
 ) {
     Column(
-        modifier = Modifier
+        modifier = ComposeModifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = ComposeModifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = ComposeModifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.headlineMedium, color = Brass)
                 if (subtitle != null) {
                     Text(
                         subtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MistDim,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = ComposeModifier.padding(top = 4.dp)
                     )
                 }
             }
@@ -63,7 +63,7 @@ fun ScreenScaffold(
 
 @Composable
 fun Panel(
-    modifier: Modifier = Modifier,
+    modifier: ComposeModifier = ComposeModifier,
     content: @Composable () -> Unit
 ) {
     Box(
@@ -81,7 +81,7 @@ fun Panel(
 fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: ComposeModifier = ComposeModifier,
     enabled: Boolean = true
 ) {
     Button(
@@ -99,7 +99,7 @@ fun PrimaryButton(
 fun GhostButton(
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: ComposeModifier = ComposeModifier,
     enabled: Boolean = true
 ) {
     OutlinedButton(

@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.modifier.Modifier
+import androidx.compose.ui.Modifier as ComposeModifier
 import androidx.compose.ui.unit.dp
 import ru.pokolenie.app.data.db.WarpProfileEntity
 import ru.pokolenie.app.presentation.components.Panel
@@ -46,11 +46,11 @@ fun WarpScreen(
         }
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = ComposeModifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(profiles, key = { it.id }) { profile ->
-                Panel(modifier = Modifier.clickable { onSelect(profile.id) }) {
+                Panel(modifier = ComposeModifier.clickable { onSelect(profile.id) }) {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             profile.name,
@@ -66,7 +66,7 @@ fun WarpScreen(
                         if (profile.isSelected) {
                             Text("выбран", color = Brass)
                         }
-                        Row(modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = ComposeModifier.fillMaxWidth()) {
                             TinyAction("Копировать .conf") { onCopy(profile) }
                             TinyAction("Удалить") { onDelete(profile.id) }
                         }

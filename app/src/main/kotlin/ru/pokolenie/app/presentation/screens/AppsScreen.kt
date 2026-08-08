@@ -17,7 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.modifier.Modifier
+import androidx.compose.ui.Modifier as ComposeModifier
 import androidx.compose.ui.unit.dp
 import ru.pokolenie.app.settings.SplitMode
 import ru.pokolenie.app.presentation.components.Panel
@@ -67,12 +67,12 @@ fun AppsScreen(
             Panel { Text("Загрузка списка приложений…", color = MistDim) }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = ComposeModifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 items(apps, key = { it.packageName }) { app ->
                     Row(
-                        modifier = Modifier
+                        modifier = ComposeModifier
                             .fillMaxWidth()
                             .clickable(enabled = splitMode != SplitMode.ALL) {
                                 onToggle(app.packageName)
@@ -85,7 +85,7 @@ fun AppsScreen(
                             enabled = splitMode != SplitMode.ALL,
                             colors = CheckboxDefaults.colors(checkedColor = Brass)
                         )
-                        Column(modifier = Modifier.weight(1f)) {
+                        Column(modifier = ComposeModifier.weight(1f)) {
                             Text(app.label, color = Mist, style = MaterialTheme.typography.bodyLarge)
                             Text(app.packageName, color = MistDim, style = MaterialTheme.typography.bodyMedium)
                         }

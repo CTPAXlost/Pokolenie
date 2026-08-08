@@ -16,7 +16,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.modifier.Modifier
+import androidx.compose.ui.Modifier as ComposeModifier
 import androidx.compose.ui.unit.dp
 import ru.pokolenie.app.settings.DnsMode
 import ru.pokolenie.app.settings.SettingsState
@@ -45,18 +45,18 @@ fun SettingsScreen(
         subtitle = "MTU, DNS и сеть. Whitelist принудительно включён."
     ) {
         Column(
-            modifier = Modifier.verticalScroll(rememberScrollState()),
+            modifier = ComposeModifier.verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Panel {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Whitelist", color = Brass, style = MaterialTheme.typography.titleLarge)
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = ComposeModifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
+                        Column(modifier = ComposeModifier.weight(1f)) {
                             Text("Обязательный режим", color = Mist)
                             Text(
                                 "Через VPN только белые домены/категории, остальное — direct.",
@@ -100,7 +100,7 @@ fun SettingsScreen(
                             value = settings.dnsServers,
                             onValueChange = onDnsServers,
                             label = { Text("Серверы (через запятую)") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = ComposeModifier.fillMaxWidth()
                         )
                     }
                     if (settings.dnsMode == DnsMode.DOH) {
@@ -108,7 +108,7 @@ fun SettingsScreen(
                             value = settings.dohUrl,
                             onValueChange = onDohUrl,
                             label = { Text("DoH URL") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = ComposeModifier.fillMaxWidth()
                         )
                     }
                 }
@@ -152,7 +152,7 @@ fun SettingsScreen(
 @Composable
 private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = ComposeModifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
