@@ -9,7 +9,6 @@ import android.net.VpnService
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import org.json.JSONObject
@@ -20,7 +19,6 @@ import ru.pokolenie.core.VpnEngineProvider
 
 class PokolenieVpnService : VpnService() {
 
-    private var tun: ParcelFileDescriptor? = null
     private val trafficHandler = Handler(Looper.getMainLooper())
     private var trafficEngineLabel = "stub"
     private val trafficTicker = object : Runnable {
@@ -46,48 +44,19 @@ class PokolenieVpnService : VpnService() {
 
     private fun connectInternal(configJson: String, label: String) {
         try {
-            disconnectTunOnly()
-            val meta = runCatching { JSONObject(configJson).optJSONObject("_pokolenie") }.getOrNull()
-            val mtu = meta?.optInt("mtu", 1280) ?: 1280
-            val splitMode = meta?.optString("split_mode", "ALL") ?: "ALL"
-            val packages = meta?.optJSONArray("split_packages")
-
-            val builder = Builder()
-                .setSession("Pokolenie")
-                .setMtu(mtu)
-                .addAddress("172.19.0.1", 30)
-                .addRoute("0.0.0.0", 0)
-                .addDnsServer("1.1.1.1")
-                .setBlocking(false)
-
-            if (packages != null && splitMode != "ALL") {
-                for (i in 0 until packages.length()) {
-                    val pkg = packages.optString(i)
-                    if (pkg.isNullOrBlank()) continue
-                    try {
-                        when (splitMode) {
-                            "INCLUDE" -> builder.addAllowedApplication(pkg)
-                            "EXCLUDE" -> builder.addDisallowedApplication(pkg)
-                        }
-                    } catch (e: Exception) {
-                        Log.w(TAG, "split package ignored: $pkg", e)
+            val metaJson = runCatching { JSONObject(configJson).optJSONObject("_pokolenie") }.getOrNull()
+            val mtu = metaJson?.optInt("mtu", 1280) ?: 1280
+            val splitMode = metaJson?.optString("split_mode", "ALL") ?: "ALL"
+            val packages = buildList {
+                val arr = metaJson?.optJSONArray("split_packages")
+                if (arr != null) {
+                    for (i in 0 until arr.length()) {
+                        val pkg = arr.optString(i)
+                        if (!pkg.isNullOrBlank()) add(pkg)
                     }
                 }
             }
-
-            try {
-                builder.addDisallowedApplication(packageName)
-            } catch (_: Exception) {
-            }
-
-            val established = builder.establish()
-            if (established == null) {
-                VpnController.onError("Не удалось создать TUN")
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                stopSelf()
-                return
-            }
-            tun = established
+            val ipv6 = metaJson?.optBoolean("ipv6", false) ?: false
 
             val cleanConfig = JSONObject(configJson).also { it.remove("_pokolenie") }.toString()
             val engine = VpnEngineProvider.get()
@@ -96,15 +65,41 @@ class PokolenieVpnService : VpnService() {
                 is StubVpnEngine -> "stub"
                 else -> engine.javaClass.simpleName
             }
+
             when (engine) {
                 is LibboxVpnEngine -> {
                     VpnDiagnostics.log("Starting libbox…")
-                    engine.start(this, cleanConfig, established.fd)
+                    engine.start(
+                        this,
+                        cleanConfig,
+                        LibboxVpnEngine.TunMeta(
+                            mtu = mtu,
+                            ipv6 = ipv6,
+                            splitMode = splitMode,
+                            splitPackages = packages
+                        )
+                    )
                 }
                 is StubVpnEngine -> {
+                    // Stub: create empty TUN so UI can show "connected" for layout tests only
+                    val established = Builder()
+                        .setSession("Pokolenie-stub")
+                        .setMtu(mtu)
+                        .addAddress("172.19.0.1", 30)
+                        .addRoute("0.0.0.0", 0)
+                        .addDnsServer("1.1.1.1")
+                        .setBlocking(false)
+                        .establish()
+                    if (established == null) {
+                        VpnController.onError("Не удалось создать TUN")
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                        stopSelf()
+                        return
+                    }
+                    established.close()
                     engine.start(cleanConfig)
-                    VpnDiagnostics.log("WARN: libbox.aar missing — stub TUN (трафик не проксируется)")
-                    Log.w(TAG, "libbox.aar not found — stub mode (config stored, UI works)")
+                    VpnDiagnostics.log("WARN: libbox.aar missing — stub TUN")
+                    Log.w(TAG, "libbox.aar not found — stub mode")
                 }
                 else -> engine.start(cleanConfig)
             }
@@ -126,15 +121,9 @@ class PokolenieVpnService : VpnService() {
         trafficHandler.removeCallbacks(trafficTicker)
         VpnDiagnostics.markDisconnected()
         runCatching { VpnEngineProvider.get().stop() }
-        disconnectTunOnly()
         VpnController.onDisconnected()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
-    }
-
-    private fun disconnectTunOnly() {
-        runCatching { tun?.close() }
-        tun = null
     }
 
     override fun onDestroy() {
@@ -162,7 +151,7 @@ class PokolenieVpnService : VpnService() {
         return NotificationCompat.Builder(this, channelId)
             .setContentTitle(getString(R.string.vpn_notification_title))
             .setContentText(text)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_vpn)
             .setContentIntent(pi)
             .setOngoing(true)
             .build()

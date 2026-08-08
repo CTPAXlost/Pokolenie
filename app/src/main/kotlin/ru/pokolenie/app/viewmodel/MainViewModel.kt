@@ -16,13 +16,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ru.pokolenie.app.PokolenieApp
-import ru.pokolenie.app.billing.AntizapretTrial
-import ru.pokolenie.app.billing.TrialState
 import ru.pokolenie.app.data.db.ServerEntity
 import ru.pokolenie.app.data.db.SourceEntity
 import ru.pokolenie.app.data.db.WarpProfileEntity
 import ru.pokolenie.app.data.model.RefreshSummary
-import ru.pokolenie.app.openvpn.AntizapretOpenVpn
 import ru.pokolenie.app.routing.SingBoxConfigBuilder
 import ru.pokolenie.app.settings.DnsMode
 import ru.pokolenie.app.settings.SettingsState
@@ -68,12 +65,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val settings = pokolenie.settings.state
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsState())
-
-    private val trialStore = AntizapretTrial(app)
-    val trial = trialStore.state
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TrialState())
-
-    val antizapretSummary: String = AntizapretOpenVpn.loadDisplaySummary(app)
 
     private val _apps = MutableStateFlow<List<InstalledApp>>(emptyList())
     val apps: StateFlow<List<InstalledApp>> = _apps.asStateFlow()
@@ -305,38 +296,26 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         VpnController.disconnect(context)
     }
 
-    fun startAntizapretTrial() {
+    fun pingWarp(profile: WarpProfileEntity) {
         viewModelScope.launch {
-            val state = trialStore.startTrialIfNeeded()
+            val result = pokolenie.ping.pingWarp(profile, settings.value.pingTimeoutMs)
             toast(
-                if (state.isActive) "Antizapret (DE): ${state.remainingLabel()}"
-                else "Триал истёк — внеси оплату или ключ"
+                if (result.ok) "${profile.name}: ${result.latencyMs} ms"
+                else "${profile.name}: нет ответа (${result.message ?: "timeout"})"
             )
         }
     }
 
-    fun unlockAntizapret(key: String) {
+    fun pingAllWarp() {
         viewModelScope.launch {
-            val ok = trialStore.unlockWithKey(key)
-            toast(if (ok) "Ключ принят" else "Неверный ключ")
-        }
-    }
-
-    fun connectAntizapret(context: Context) {
-        viewModelScope.launch {
-            val state = trialStore.startTrialIfNeeded()
-            if (!state.isActive) {
-                toast("Antizapret (DE) заблокирован: оплати сутки или введи ключ")
-                return@launch
-            }
-            VpnDiagnostics.log("Launch Antizapret (DE) via OpenVPN client")
-            when (AntizapretOpenVpn.launchExternal(context)) {
-                AntizapretOpenVpn.LaunchResult.Ok ->
-                    toast("Открыт клиент OpenVPN · ${AntizapretOpenVpn.DISPLAY_NAME}")
-                AntizapretOpenVpn.LaunchResult.NeedClient -> {
-                    toast("Установи OpenVPN for Android")
-                    AntizapretOpenVpn.openClientStore(context)
-                }
+            _home.value = _home.value.copy(busy = true)
+            try {
+                val list = pokolenie.database.warpDao().getAll()
+                val results = pokolenie.ping.pingAllWarp(list, settings.value.pingTimeoutMs)
+                val ok = results.count { it.ok }
+                toast("Warp пинг: живых $ok / ${results.size}")
+            } finally {
+                _home.value = _home.value.copy(busy = false)
             }
         }
     }

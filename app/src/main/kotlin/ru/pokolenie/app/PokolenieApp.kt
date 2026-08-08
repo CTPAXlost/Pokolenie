@@ -31,7 +31,7 @@ class PokolenieApp : Application() {
         database = AppDatabase.get(this)
         settings = AppSettings(this)
         subscriptions = SubscriptionRepository(database.sourceDao(), database.serverDao())
-        ping = PingHealthService(database.serverDao())
+        ping = PingHealthService(database.serverDao(), database.warpDao())
         warp = WarpGenerator(this, database.warpDao())
         appScope.launch {
             subscriptions.ensureDefaults()

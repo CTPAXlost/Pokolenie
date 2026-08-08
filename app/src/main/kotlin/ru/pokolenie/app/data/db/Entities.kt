@@ -64,5 +64,7 @@ data class WarpProfileEntity(
     val clientId: String?,
     val confText: String,
     val createdAt: Long = System.currentTimeMillis(),
-    val isSelected: Boolean = false
+    val isSelected: Boolean = false,
+    val latencyMs: Long? = null,
+    val lastPingAt: Long = 0
 )

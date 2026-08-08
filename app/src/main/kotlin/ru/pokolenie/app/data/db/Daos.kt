@@ -98,4 +98,7 @@ interface WarpDao {
 
     @Query("UPDATE warp_profiles SET isSelected = 1 WHERE id = :id")
     suspend fun select(id: Long)
+
+    @Query("UPDATE warp_profiles SET latencyMs = :latency, lastPingAt = :ts WHERE id = :id")
+    suspend fun updateLatency(id: Long, latency: Long?, ts: Long)
 }

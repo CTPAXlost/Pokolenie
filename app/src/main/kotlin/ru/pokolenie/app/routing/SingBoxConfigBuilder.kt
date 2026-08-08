@@ -214,6 +214,7 @@ class SingBoxConfigBuilder {
                 .put("split_packages", JSONArray(settings.splitPackages.toList()))
                 .put("allow_lan", settings.allowLan)
                 .put("mtu", settings.mtu)
+                .put("ipv6", settings.ipv6)
         )
     }
 

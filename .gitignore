@@ -14,7 +14,10 @@
 _ref_apk/
 *_ref_apk/
 app/libs/*.aar
+app/libs/_libbox_unpack/
+app/libs/*.zip
 !app/libs/.gitkeep
+tools/dump_class.py
 *.keystore
 *.jks
 .kotlin/

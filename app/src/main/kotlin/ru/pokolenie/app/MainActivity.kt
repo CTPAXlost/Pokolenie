@@ -64,7 +64,6 @@ class MainActivity : ComponentActivity() {
                 val warp by vm.warpProfiles.collectAsStateWithLifecycle()
                 val settings by vm.settings.collectAsStateWithLifecycle()
                 val apps by vm.apps.collectAsStateWithLifecycle()
-                val trial by vm.trial.collectAsStateWithLifecycle()
                 val backStack by nav.currentBackStackEntryAsState()
                 val route = backStack?.destination?.route ?: Routes.Home
 
@@ -143,8 +142,6 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(
                                 state = home,
                                 servers = servers,
-                                trial = trial,
-                                antizapretSummary = vm.antizapretSummary,
                                 onToggleVpn = {
                                     if (home.vpnState == ru.pokolenie.app.vpn.VpnConnectionState.Connected ||
                                         home.vpnState == ru.pokolenie.app.vpn.VpnConnectionState.Connecting
@@ -160,10 +157,7 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onRefresh = { vm.refreshSubscriptions() },
                                 onPingAll = { vm.pingAllServers() },
-                                onToggleWhitelist = vm::setWhitelist,
-                                onConnectAntizapret = { vm.connectAntizapret(this@MainActivity) },
-                                onUnlockKey = vm::unlockAntizapret,
-                                onStartTrial = vm::startAntizapretTrial
+                                onToggleWhitelist = vm::setWhitelist
                             )
                         }
                         composable(Routes.Servers) {
@@ -196,7 +190,9 @@ class MainActivity : ComponentActivity() {
                                 onDelete = vm::deleteWarp,
                                 onConnect = {
                                     ensureVpnThen { vm.connectWarp(this@MainActivity) }
-                                }
+                                },
+                                onPing = vm::pingWarp,
+                                onPingAll = vm::pingAllWarp
                             )
                         }
                         composable(Routes.Apps) {

@@ -21,6 +21,7 @@ import ru.pokolenie.app.presentation.components.TinyAction
 import ru.pokolenie.app.presentation.theme.Brass
 import ru.pokolenie.app.presentation.theme.Mist
 import ru.pokolenie.app.presentation.theme.MistDim
+import ru.pokolenie.app.presentation.theme.SignalGreen
 
 @Composable
 fun WarpScreen(
@@ -30,11 +31,13 @@ fun WarpScreen(
     onSelect: (Long) -> Unit,
     onCopy: (WarpProfileEntity) -> Unit,
     onDelete: (Long) -> Unit,
-    onConnect: () -> Unit
+    onConnect: () -> Unit,
+    onPing: (WarpProfileEntity) -> Unit,
+    onPingAll: () -> Unit
 ) {
     ScreenScaffold(
         title = "Warp",
-        subtitle = "WARP_STR* (AmneziaWG/engage:4500) + v1/v2/v3. Источник: Cloudflare WARP API + Amnezia params"
+        subtitle = "WARP_STR* · пинг = TCP до endpoint (не через туннель)"
     ) {
         PrimaryButton(
             text = if (busy) "Генерация…" else "Сгенерировать Warp",
@@ -43,6 +46,7 @@ fun WarpScreen(
         )
         if (profiles.isNotEmpty()) {
             PrimaryButton(text = "Подключить выбранный Warp", onClick = onConnect, enabled = !busy)
+            PrimaryButton(text = "Пинг всех Warp", onClick = onPingAll, enabled = !busy)
         }
 
         LazyColumn(
@@ -52,11 +56,25 @@ fun WarpScreen(
             items(profiles, key = { it.id }) { profile ->
                 Panel(modifier = Modifier.clickable { onSelect(profile.id) }) {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            profile.name,
-                            color = if (profile.isSelected) Brass else Mist,
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                profile.name,
+                                color = if (profile.isSelected) Brass else Mist,
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                profile.latencyMs?.let { "$it ms" } ?: "—",
+                                color = when {
+                                    profile.latencyMs == null -> MistDim
+                                    profile.latencyMs < 200 -> SignalGreen
+                                    else -> Brass
+                                }
+                            )
+                        }
                         Text(
                             "${profile.endpointHost}:${profile.endpointPort}",
                             color = MistDim,
@@ -67,6 +85,7 @@ fun WarpScreen(
                             Text("выбран", color = Brass)
                         }
                         Row(modifier = Modifier.fillMaxWidth()) {
+                            TinyAction("Пинг") { onPing(profile) }
                             TinyAction("Копировать .conf") { onCopy(profile) }
                             TinyAction("Удалить") { onDelete(profile.id) }
                         }

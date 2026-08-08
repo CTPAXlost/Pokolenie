@@ -25,7 +25,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,9 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import ru.pokolenie.app.billing.TrialState
 import ru.pokolenie.app.data.db.ServerEntity
-import ru.pokolenie.app.openvpn.AntizapretOpenVpn
 import ru.pokolenie.app.presentation.components.GhostButton
 import ru.pokolenie.app.presentation.components.Panel
 import ru.pokolenie.app.presentation.components.PrimaryButton
@@ -64,17 +61,12 @@ import ru.pokolenie.app.vpn.VpnDiagnostics
 fun HomeScreen(
     state: HomeUiState,
     servers: List<ServerEntity>,
-    trial: TrialState,
-    antizapretSummary: String,
     onToggleVpn: () -> Unit,
     onSelectServer: (Long) -> Unit,
     onConnectWarp: () -> Unit,
     onRefresh: () -> Unit,
     onPingAll: () -> Unit,
-    onToggleWhitelist: (Boolean) -> Unit,
-    onConnectAntizapret: () -> Unit,
-    onUnlockKey: (String) -> Unit,
-    onStartTrial: () -> Unit
+    onToggleWhitelist: (Boolean) -> Unit
 ) {
     val connected = state.vpnState == VpnConnectionState.Connected
     val connecting = state.vpnState == VpnConnectionState.Connecting
@@ -90,7 +82,6 @@ fun HomeScreen(
     )
     var pickerOpen by remember { mutableStateOf(false) }
     var showToasty by remember { mutableStateOf(false) }
-    var unlockDraft by remember { mutableStateOf("") }
     val traffic by VpnDiagnostics.traffic.collectAsStateWithLifecycle()
     val logs by VpnDiagnostics.logs.collectAsStateWithLifecycle()
 
@@ -291,36 +282,6 @@ fun HomeScreen(
                             }
                         }
                     }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Panel {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(AntizapretOpenVpn.DISPLAY_NAME, color = Brass, style = MaterialTheme.typography.titleLarge)
-                    Text(antizapretSummary, color = MistDim, style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        "Доступ: ${if (trial.isActive) trial.remainingLabel() else "нужна оплата / ключ"}",
-                        color = if (trial.isActive) SignalGreen else SignalRed,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    if (!trial.isActive && trial.expiresAt == 0L) {
-                        PrimaryButton(text = "Активировать 24ч", onClick = onStartTrial)
-                    }
-                    PrimaryButton(
-                        text = "Подключить ${AntizapretOpenVpn.DISPLAY_NAME}",
-                        onClick = onConnectAntizapret,
-                        enabled = trial.isActive && !state.busy
-                    )
-                    OutlinedTextField(
-                        value = unlockDraft,
-                        onValueChange = { unlockDraft = it },
-                        label = { Text("Ключ оплаты") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    GhostButton("Применить ключ", onClick = { onUnlockKey(unlockDraft) })
                 }
             }
 

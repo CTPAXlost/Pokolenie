@@ -17,47 +17,57 @@ jobs:
     name: Build libbox.aar
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      SINGBOX_TAG: v1.11.15
     steps:
+      - name: Cache libbox.aar
+        id: cache-libbox
+        uses: actions/cache@v4
+        with:
+          path: libbox-cache/libbox.aar
+          key: libbox-${{ env.SINGBOX_TAG }}-gvisor-wg-utls-v1
+
       - name: Set up Go
+        if: steps.cache-libbox.outputs.cache-hit != 'true'
         uses: actions/setup-go@v5
         with:
           go-version: "1.22.x"
 
       - name: Set up JDK 17
+        if: steps.cache-libbox.outputs.cache-hit != 'true'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Setup Android SDK
+        if: steps.cache-libbox.outputs.cache-hit != 'true'
         uses: android-actions/setup-android@v3
 
       - name: Install Android SDK packages + NDK
+        if: steps.cache-libbox.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
-          # Prefer runner preinstall, else install a known NDK package
           if [ -n "${ANDROID_NDK_LATEST_HOME:-}" ] && [ -d "$ANDROID_NDK_LATEST_HOME" ]; then
             export ANDROID_NDK_HOME="$ANDROID_NDK_LATEST_HOME"
           elif [ -n "${ANDROID_NDK_HOME:-}" ] && [ -d "$ANDROID_NDK_HOME" ]; then
-            : # already set
+            :
           else
             for ndk in "ndk;27.0.12077973" "ndk;26.1.10909125" "ndk;25.2.9519653"; do
               if sdkmanager "$ndk"; then
                 ver="${ndk#ndk;}"
                 export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/$ver"
-                echo "Installed $ndk"
                 break
               fi
             done
           fi
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
-          echo "Using ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
           test -d "$ANDROID_NDK_HOME"
-          ls -la "$ANDROID_HOME/ndk" || true
 
       - name: Install gomobile (sagernet)
+        if: steps.cache-libbox.outputs.cache-hit != 'true'
         run: |
           go install github.com/sagernet/gomobile/cmd/gomobile@v0.1.8
           go install github.com/sagernet/gomobile/cmd/gobind@v0.1.8
@@ -65,31 +75,29 @@ jobs:
           gomobile init
 
       - name: Clone and build sing-box libbox
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+        if: steps.cache-libbox.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
           if [ -z "${ANDROID_NDK_HOME:-}" ] && [ -n "${ANDROID_NDK_LATEST_HOME:-}" ]; then
             export ANDROID_NDK_HOME="$ANDROID_NDK_LATEST_HOME"
           fi
-          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
-          git clone --depth 1 --branch v1.11.15 https://github.com/SagerNet/sing-box.git
+          git clone --depth 1 --branch "$SINGBOX_TAG" https://github.com/SagerNet/sing-box.git
           cd sing-box
           gomobile bind -v -androidapi 26 \
             -javapkg=io.nekohasekai \
             -libname=box \
             -tags "with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api" \
             ./experimental/libbox
-          # gomobile -libname=box → box.aar
           if [ -f box.aar ]; then mv -f box.aar libbox.aar; fi
-          test -f libbox.aar
-          ls -lh libbox.aar
+          mkdir -p ../libbox-cache
+          cp libbox.aar ../libbox-cache/libbox.aar
+          ls -lh ../libbox-cache/libbox.aar
 
       - name: Upload libbox.aar
         uses: actions/upload-artifact@v4
         with:
           name: libbox-aar
-          path: sing-box/libbox.aar
+          path: libbox-cache/libbox.aar
           retention-days: 5
 
   build:
