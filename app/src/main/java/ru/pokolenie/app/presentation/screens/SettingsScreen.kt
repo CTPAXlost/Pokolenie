@@ -1,4 +1,4 @@
-package ru.pokolenie.app.ui.screens
+package ru.pokolenie.app.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,12 +20,12 @@ import androidx.compose.ui.modifier.Modifier
 import androidx.compose.ui.unit.dp
 import ru.pokolenie.app.settings.DnsMode
 import ru.pokolenie.app.settings.SettingsState
-import ru.pokolenie.app.ui.components.Panel
-import ru.pokolenie.app.ui.components.ScreenScaffold
-import ru.pokolenie.app.ui.theme.Brass
-import ru.pokolenie.app.ui.theme.Ink
-import ru.pokolenie.app.ui.theme.Mist
-import ru.pokolenie.app.ui.theme.MistDim
+import ru.pokolenie.app.presentation.components.Panel
+import ru.pokolenie.app.presentation.components.ScreenScaffold
+import ru.pokolenie.app.presentation.theme.Brass
+import ru.pokolenie.app.presentation.theme.Ink
+import ru.pokolenie.app.presentation.theme.Mist
+import ru.pokolenie.app.presentation.theme.MistDim
 
 @Composable
 fun SettingsScreen(

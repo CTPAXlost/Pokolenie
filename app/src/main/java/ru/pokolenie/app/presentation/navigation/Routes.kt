@@ -1,4 +1,4 @@
-package ru.pokolenie.app.ui.navigation
+package ru.pokolenie.app.presentation.navigation
 
 object Routes {
     const val Home = "home"

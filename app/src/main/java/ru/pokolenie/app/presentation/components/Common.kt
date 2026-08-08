@@ -1,4 +1,4 @@
-package ru.pokolenie.app.ui.components
+package ru.pokolenie.app.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,11 +20,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.modifier.Modifier
 import androidx.compose.ui.unit.dp
-import ru.pokolenie.app.ui.theme.Brass
-import ru.pokolenie.app.ui.theme.Ink
-import ru.pokolenie.app.ui.theme.InkElevated
-import ru.pokolenie.app.ui.theme.InkLine
-import ru.pokolenie.app.ui.theme.MistDim
+import ru.pokolenie.app.presentation.theme.Brass
+import ru.pokolenie.app.presentation.theme.Ink
+import ru.pokolenie.app.presentation.theme.InkElevated
+import ru.pokolenie.app.presentation.theme.InkLine
+import ru.pokolenie.app.presentation.theme.MistDim
 
 @Composable
 fun ScreenScaffold(

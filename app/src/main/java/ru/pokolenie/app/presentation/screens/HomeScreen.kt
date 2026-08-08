@@ -1,4 +1,4 @@
-package ru.pokolenie.app.ui.screens
+package ru.pokolenie.app.presentation.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -31,15 +31,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import ru.pokolenie.app.ui.components.GhostButton
-import ru.pokolenie.app.ui.components.Panel
-import ru.pokolenie.app.ui.components.PrimaryButton
-import ru.pokolenie.app.ui.theme.Brass
-import ru.pokolenie.app.ui.theme.BrassSoft
-import ru.pokolenie.app.ui.theme.Mist
-import ru.pokolenie.app.ui.theme.MistDim
-import ru.pokolenie.app.ui.theme.SignalGreen
-import ru.pokolenie.app.ui.theme.SignalRed
+import ru.pokolenie.app.presentation.components.GhostButton
+import ru.pokolenie.app.presentation.components.Panel
+import ru.pokolenie.app.presentation.components.PrimaryButton
+import ru.pokolenie.app.presentation.theme.Brass
+import ru.pokolenie.app.presentation.theme.BrassSoft
+import ru.pokolenie.app.presentation.theme.Mist
+import ru.pokolenie.app.presentation.theme.MistDim
+import ru.pokolenie.app.presentation.theme.SignalGreen
+import ru.pokolenie.app.presentation.theme.SignalRed
 import ru.pokolenie.app.viewmodel.HomeUiState
 import ru.pokolenie.app.vpn.VpnConnectionState
 

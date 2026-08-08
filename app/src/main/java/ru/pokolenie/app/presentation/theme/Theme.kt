@@ -1,4 +1,4 @@
-package ru.pokolenie.app.ui.theme
+package ru.pokolenie.app.presentation.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

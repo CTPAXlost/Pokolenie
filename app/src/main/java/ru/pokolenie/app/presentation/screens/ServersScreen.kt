@@ -1,4 +1,4 @@
-package ru.pokolenie.app.ui.screens
+package ru.pokolenie.app.presentation.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,14 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.modifier.Modifier
 import androidx.compose.ui.unit.dp
 import ru.pokolenie.app.data.db.ServerEntity
-import ru.pokolenie.app.ui.components.GhostButton
-import ru.pokolenie.app.ui.components.Panel
-import ru.pokolenie.app.ui.components.ScreenScaffold
-import ru.pokolenie.app.ui.components.TinyAction
-import ru.pokolenie.app.ui.theme.Brass
-import ru.pokolenie.app.ui.theme.Mist
-import ru.pokolenie.app.ui.theme.MistDim
-import ru.pokolenie.app.ui.theme.SignalGreen
+import ru.pokolenie.app.presentation.components.GhostButton
+import ru.pokolenie.app.presentation.components.Panel
+import ru.pokolenie.app.presentation.components.ScreenScaffold
+import ru.pokolenie.app.presentation.components.TinyAction
+import ru.pokolenie.app.presentation.theme.Brass
+import ru.pokolenie.app.presentation.theme.Mist
+import ru.pokolenie.app.presentation.theme.MistDim
+import ru.pokolenie.app.presentation.theme.SignalGreen
 
 @Composable
 fun ServersScreen(
